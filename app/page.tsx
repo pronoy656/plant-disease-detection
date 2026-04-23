@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Upload, Leaf, X, Image as ImageIcon, Camera, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ThemeToggle } from "../components/theme-toggle";
 
 interface Prediction {
   label: string;
@@ -87,7 +88,6 @@ export default function Home() {
         throw new Error(data.error || "Failed to analyze image");
       }
 
-      // Hugging Face inference API returns results as an array of {label, score}
       setResults(data);
     } catch (err: any) {
       console.error("Analysis Error:", err);
@@ -101,8 +101,14 @@ export default function Home() {
     return label.replace(/___/g, ': ').replace(/_/g, ' ');
   };
 
+  const topResult = results && results.length > 0 ? results[0] : null;
+
   return (
-    <main className="min-h-screen max-w-7xl mx-auto px-6 py-12 md:py-20">
+    <main className="min-h-screen max-w-7xl mx-auto px-6 py-12 md:py-20 relative">
+      <div className="absolute top-6 right-6 md:top-10 md:right-10">
+        <ThemeToggle />
+      </div>
+
       <section className="text-center mb-16 animate-fade-in">
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="p-3 bg-primary/10 rounded-2xl">
@@ -120,10 +126,10 @@ export default function Home() {
         </p>
       </section>
 
-      <section className="max-w-xl mx-auto glass p-8 md:p-12 rounded-[2.5rem] transition-all duration-500 hover:-translate-y-2 animate-fade-in [animation-delay:200ms]">
+      <section className="max-w-xl mx-auto glass p-8 md:p-12 rounded-[2.5rem] ">
         {!selectedImage ? (
           <div
-            className={`drop-zone ${isDragging ? 'scale-[1.02] border-primary-dark bg-primary/20' : ''}`}
+            className={`drop-zone ${isDragging ? 'scale-[1.02] border-primary-dark bg-primary/20 dark:bg-primary/30' : ''}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -141,7 +147,7 @@ export default function Home() {
                 <Upload className="w-10 h-10 text-primary" />
               </div>
             </div>
-            <h3 className="text-xl font-bold mb-2">Click or drag image to upload</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Click or drag image to upload</h3>
             <p className="text-slate-500 dark:text-slate-400">Support for JPG, PNG and WebP</p>
           </div>
         ) : (
@@ -165,7 +171,7 @@ export default function Home() {
               </div>
             )}
 
-            {!results ? (
+            {!topResult ? (
               <button
                 className="btn-primary flex items-center justify-center gap-2"
                 onClick={handleAnalyze}
@@ -184,31 +190,22 @@ export default function Home() {
               </button>
             ) : (
               <div className="mt-8 space-y-6 animate-fade-in">
-                <div className="flex items-center gap-2 text-primary font-bold text-lg mb-4">
-                  <CheckCircle2 className="w-6 h-6" />
-                  Analysis Complete
-                </div>
-                
-                <div className="space-y-4">
-                  {results.slice(0, 3).map((result, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex justify-between items-center text-sm font-semibold">
-                        <span className="text-slate-700 dark:text-slate-200">{formatLabel(result.label)}</span>
-                        <span className="text-primary">{(result.score * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary transition-all duration-1000 ease-out" 
-                          style={{ width: `${result.score * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+
+
+                <div className="p-6 bg-primary/5 dark:bg-primary/10 rounded-3xl border border-primary/20">
+                  <div className="text-center">
+                    <h4 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+                      {formatLabel(topResult.label)}
+                    </h4>
+                    <p className="text-lg text-primary font-semibold">
+                      {(topResult.score * 100).toFixed(1)}% Confidence
+                    </p>
+                  </div>
                 </div>
 
-                <button 
+                <button
                   onClick={removeImage}
-                  className="w-full mt-4 py-3 text-slate-500 hover:text-primary font-semibold transition-colors flex items-center justify-center gap-2"
+                  className="w-full mt-2 py-3 text-slate-500 hover:text-primary font-semibold transition-colors flex items-center justify-center gap-2"
                 >
                   <ImageIcon className="w-4 h-4" />
                   Try Another Image
